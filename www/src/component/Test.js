@@ -23,49 +23,64 @@ class Test extends React.Component {
         var dt = LibCommon.formatDate( new Date(), "YYYY-MM-DD_hhmmss");
         axios.get('./cms.json?' + dt).then(response => {
             var resData = response.data
-            resData.items = LibCommon.get_reverse_items( resData.items )
-            this.setState({ data: resData })
+            resData.items = LibCommon.get_wasm_items( resData.items )
+//            resData.items = LibCommon.get_reverse_items( resData.items )
+console.log(resData.items );
+            var items_all = [];
+            var pages_display = 0;
             if(resData.file_version != null){
-                if(this.state.data.page_items != null){
-                    if(this.state.data.page_items.length > 0){
-                        this.setState({ pages_display: 1 })
+                if(resData.page_items != null){
+                    if(resData.page_items.length > 0){
+                        pages_display = 1;
                     }
                 }
-                this.setState({ items_all: this.state.data.items })
+                items_all = resData.items;
             }else{
                 alert("Error, file version can not import, version 2 over require")
             }
-            var page_max = LibPaginate.get_max_page(this.state.data.items, this.page_one_max)
-            this.setState({ page_max: page_max })
-            var items = LibPaginate.get_items(this.state.data.items, this.state.page_number , this.page_one_max )
+            var page_max = LibPaginate.get_max_page(resData.items, this.page_one_max)
+            var items = LibPaginate.get_items(resData.items, this.state.page_number , this.page_one_max )
             resData.items = items
-            this.setState({ data: resData })
+            var pagenate_display = 0;
             if(page_max > 1){
-                this.setState({ pagenate_display: 1 })
+                pagenate_display =1;
             }
-console.log( this.state.pagenate_display )            
+            this.setState({ 
+                data: resData,
+                pages_display : pages_display,
+                items_all: items_all,
+                page_max: page_max,
+                pagenate_display: pagenate_display, 
+            })
+
+//console.log( data.items )
         })
         .catch(function (error) {
             console.log(error)
-        })      
-        //    wasm.greet();
+        })
     }
+
     tabRow(){
         if(this.state.data.items instanceof Array){
+            var json = JSON.stringify( this.state.data.items );
+//console.log( json )
+            wasm.wasm_task_disp("div_post_wrap", String(json) );            
+            /*
             return this.state.data.items.map(function(object, i){
                 console.log(object)
                 var json = JSON.stringify( object );
                 wasm.wasm_post_row("ul_post_wrap", String(json) );
-//                return <TopPostsRow obj={object} key={i} />
             })
+            */
         }
     }    
     render(){
+        $("#div_post_wrap").empty();
         return(
         <div>
             <h1>test</h1>
             <h2>welcome, test2</h2>
-            <div id="ul_post_wrap">post:
+            <div id="div_post_wrap">post:
                 {this.tabRow()}
             </div>
         </div>

@@ -4,10 +4,9 @@ import $ from  'jquery'
 import LibCommon from '../libs/LibCommon';
 import LibCmsEdit_3 from '../libs/LibCmsEdit_3';
 import LibPaginate from '../libs/LibPaginate';
-import LibSystem from '../libs/LibSystem';
+import TopPostsRow from './Layouts/TopPostsRow';
 import PagesRow from './Layouts/PagesRow';
 import TopContent from './Layouts/TopContent';
-import * as wasm from "wasm-cms";
 //
 class Home extends React.Component {
     constructor(props) {
@@ -26,41 +25,30 @@ class Home extends React.Component {
         this.handleClickPagenate = this.handleClickPagenate.bind(this);
     }  
     componentDidMount(){
-        var config = LibSystem.get_config()
-console.log( "ver: "+ config.SYS_VERSION );        
         var dt = LibCommon.formatDate( new Date(), "YYYY-MM-DD_hhmmss");
         axios.get('./cms.json?' + dt).then(response => {
             var resData = response.data
-            resData.items = LibCommon.get_wasm_items( resData.items )
-            var items_all = [];
-            var pages_display = 0;
+            resData.items = LibCommon.get_reverse_items( resData.items )
+            this.setState({ data: resData })
             if(resData.file_version != null){
-//console.log(resData.page_items );
-                if(resData.page_items != null){
-                    if(resData.page_items.length > 0){
-                        pages_display = 1;
+                if(this.state.data.page_items != null){
+                    if(this.state.data.page_items.length > 0){
+                        this.setState({ pages_display: 1 })
                     }
                 }
-                items_all = resData.items;
+                this.setState({ items_all: this.state.data.items })
             }else{
                 alert("Error, file version can not import, version 2 over require")
             }
-            var page_max = LibPaginate.get_max_page(resData.items, this.page_one_max)
-            var items = LibPaginate.get_items(resData.items, this.state.page_number , this.page_one_max )
+            var page_max = LibPaginate.get_max_page(this.state.data.items, this.page_one_max)
+            this.setState({ page_max: page_max })
+            var items = LibPaginate.get_items(this.state.data.items, this.state.page_number , this.page_one_max )
             resData.items = items
-            var pagenate_display = 0;
+            this.setState({ data: resData })
             if(page_max > 1){
-                pagenate_display =1;
+                this.setState({ pagenate_display: 1 })
             }
-            this.setState({ 
-                data: resData,
-                pages_display : pages_display,
-                items_all: items_all,
-                page_max: page_max,
-                pagenate_display: pagenate_display, 
-            })
-
-// console.log( resData.items )
+console.log( this.state.pagenate_display )
         })
         .catch(function (error) {
             console.log(error)
@@ -131,25 +119,22 @@ console.log( "ver: "+ config.SYS_VERSION );
     }
     tabRow(){
         if(this.state.data.items instanceof Array){
-            var json = JSON.stringify( this.state.data.items );
-//console.log( json )
-            wasm.wasm_task_disp("div_post_wrap", String(json) );            
+            return this.state.data.items.map(function(object, i){
+                return <TopPostsRow obj={object} key={i} />
+            })
         }
     }
     handleClickPagenate(){
         var number = this.state.page_number + 1
+        this.setState({ page_number: number })
         var items  = LibPaginate.get_items(
             this.state.items_all, number , this.page_one_max 
         );
         var new_items = LibPaginate.add_page_items(this.state.data.items, items );  
         var new_data = this.state.data
         new_data.items = new_items
-        this.setState({ 
-            data: new_data ,
-            page_number: number
-        })
-console.log("handleClickPagenate: " + number )
-//console.log(new_data.items )
+        this.setState({ data: new_data })
+//        console.log("handleClickPagenate: " + number )
     }
     dispPagenate(){
         if(this.state.pagenate_display ===1){
@@ -163,8 +148,6 @@ console.log("handleClickPagenate: " + number )
         }
     }
     render(){
-//console.log("#-render")
-        $("#div_post_wrap").empty();
         return(
         <div className="body_main_wrap">
             <div id="div_img_main2"  className="cover" valign="bottom">
@@ -192,9 +175,7 @@ console.log("handleClickPagenate: " + number )
                             <div id="div_news">
                                 <h2 className="h4_td_title mt-2 mb-2" >New Post</h2>
                             </div>  
-                            <div id="div_post_wrap">
-                                {this.tabRow()}
-                            </div>
+                            {this.tabRow()}
                             {this.dispPagenate()}                      
                         </div>
                     </div>

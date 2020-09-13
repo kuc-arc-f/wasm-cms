@@ -1,12 +1,12 @@
 ﻿# wasm-cms
 
- Version: 0.9.1
+ Version: 0.9.2
 
  Author  : Kouji Nakashima / kuc-arc-f.com
 
  date    : 2020/09/06
 
- update : 2020/09/07
+ update : 2020/09/13
 
 ***
 

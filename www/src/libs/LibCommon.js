@@ -51,7 +51,6 @@ export default {
         });        
         return data
     },    
-
     get_reverse_items: function(items){
 		var data =[]
 		var self = this
@@ -59,6 +58,26 @@ export default {
             var date = new Date(item.created_at)
             date = self.formatDate(date, 'YYYY-MM-DD hh:mm')
             item.created_at = date
+            item.category.created_at = date
+//console.log(date)
+            data.unshift(item)                        
+        });        
+        return data
+    },    
+    get_wasm_items: function(items){
+		var data =[]
+		var self = this
+        items.forEach(function(item){
+            var date = new Date(item.created_at)
+//            var row= {}
+            date = self.formatDate(date, 'YYYY-MM-DD hh:mm')
+            item.created_at = date
+            item.category.created_at = date
+            var category_name = "";
+            if(item.category !=null ){
+                category_name  = item.category.name;
+            }
+            item.category_name = category_name
 //console.log(date)
             data.unshift(item)                        
         });        

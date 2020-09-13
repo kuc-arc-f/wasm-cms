@@ -2,6 +2,7 @@ mod utils;
 
 use wasm_bindgen::prelude::*;
 use web_sys::console;
+use serde::{Deserialize, Serialize};
 use serde_json::{Value};
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
@@ -23,6 +24,57 @@ pub fn greet() {
 #[wasm_bindgen]
 pub fn add(x: i32, y: i32) ->i32{
     return x + y;
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct PostItem {
+    id: i64,
+    show_id: String,
+    title: String,
+    content: String,
+    created_at: String,
+    category_name: String,
+}
+
+//
+fn convert_struct2str(row : &PostItem) -> String{
+    let mut ret : String = String::from("");
+    let s_elm = format!("
+    <div class='div_post_row_wrap'>
+        <a href='#/show/{}'>
+            <h3 class='ml-10'>{}</h3>
+        </a>
+        <div class='div_post_date_wrap'>
+            <p class='mb-0'>
+                <span class='mr-2 time_icon_wrap'><i class='far fa-calendar'></i></span>
+                {} ,
+                <span>ID :{}</span>
+            </p>
+            <span class='folder_icon_wrap mr-2'><i class='fas fa-folder'></i> {}</span>            
+        </div>
+        <hr class='hr_ex1'>    
+    </div>", row.show_id, row.title ,row.created_at ,row.id, row.category_name );
+    ret = s_elm.to_string();
+    return ret;
+}
+
+#[wasm_bindgen]
+pub fn wasm_task_disp(id_name: &str, json: &str) -> Result<(), JsValue>{
+    let mut s_elm : String = String::from("");
+    let deserialized: Vec<PostItem> = serde_json::from_str(json).unwrap();
+    for row in &deserialized {
+        let s = convert_struct2str( row);
+        s_elm.push_str( &s );
+//        console::log_1(&JsValue::from_str( &row.category_name ));
+    }
+    // dom , add
+    let document = web_sys::window().unwrap().document().unwrap();
+    let entry_point = document.get_element_by_id(id_name).unwrap();
+    let val = document.create_element("div")?;
+    val.set_inner_html(&s_elm );
+    entry_point.append_child(&val)?;
+
+    Ok(())
 }
 
 #[wasm_bindgen]
@@ -47,9 +99,9 @@ pub fn wasm_post_row(id_name: &str, json: &str) -> Result<(), JsValue>{
         <a href='#/show/{}'>
             <h3 class='ml-10'>{}</h3>
         </a>
-        <div>
+        <div class='div_post_date_wrap'>
             <p class='mb-0'>
-                <span class='mr-2 time_icon_wrap'><i class='far fa-calendar'></i>
+                <span class='mr-2 time_icon_wrap'><i class='far fa-calendar'></i></span>
                 {} ,
                 <span>ID :{}</span>
             </p>
